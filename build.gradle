@@ -1,0 +1,83 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.16'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'gr.priovolos'
+version = '0.0.1-SNAPSHOT'
+description = 'RESTful WS App'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+		vendor = JvmVendorSpec.AMAZON
+	}
+}
+
+bootJar {
+	archiveFileName = "backendapp.jar"
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+	testCompileOnly {
+		extendsFrom testAnnotationProcessor
+	}
+}
+
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'com.h2database:h2'
+	// in-memory DB for Repository tests
+
+//	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//    runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'org.postgresql:postgresql'
+
+//	compileOnly 'org.projectlombok:lombok' redundant if compileOnly.extendsFrom has been defined
+	annotationProcessor 'org.projectlombok:lombok'
+//	testCompileOnly 'org.projectlombok:lombok:1.18.30' redundant if testCompileOnly.extendsFrom has been defined
+	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'net.datafaker:datafaker:2.3.1'
+
+	// Source: https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+	implementation 'org.apache.commons:commons-lang3:3.18.0'
+	// override for addressing vulnerability
+
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+
+	implementation 'org.springframework.retry:spring-retry'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+	// for finding real content type of a file
+	implementation 'org.apache.tika:tika-core:3.2.3'
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
