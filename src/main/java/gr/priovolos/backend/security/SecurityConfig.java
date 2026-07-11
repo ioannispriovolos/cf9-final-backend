@@ -60,6 +60,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/teachers").permitAll()           // register
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/authenticate").permitAll()
+                                .requestMatchers("/api/v1/automation/**").authenticated()                   // This blocks ALL unauthenticated traffic completely at the gate
                                 .requestMatchers("/api/v1/eligible/**").permitAll()
                                 .requestMatchers(
                                         "/swagger-ui.html",        // The old Swagger UI HTML (if used)

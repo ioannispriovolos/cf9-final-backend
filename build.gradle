@@ -75,6 +75,9 @@ dependencies {
 
 	// for finding real content type of a file
 	implementation 'org.apache.tika:tika-core:3.2.3'
+
+	// Apache MINA SSHD Core
+	implementation 'org.apache.sshd:sshd-core:2.14.0'
 }
 
 
