@@ -35,7 +35,7 @@ public class SshAutomationService {
         client.setServerKeyVerifier(AcceptAllServerKeyVerifier.INSTANCE);
 
         client.start();
-        log.warn("⚠️ SSH Client initialized in EVALUATION mode: Host verification skipped for deployment simplicity.");
+        log.warn("SSH Client initialized in EVALUATION mode: Host verification skipped for deployment simplicity.");
     }
 
     @PreDestroy
