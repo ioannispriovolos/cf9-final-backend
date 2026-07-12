@@ -58,17 +58,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
                                 .requestMatchers(HttpMethod.POST, "/api/v1/teachers").permitAll()           // register
-                                .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/users").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/v1/users/{uuid}").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/authenticate").permitAll()
                                 .requestMatchers("/api/v1/automation/**").authenticated()                   // This blocks ALL unauthenticated traffic completely at the gate
                                 .requestMatchers("/api/v1/eligible/**").permitAll()
                                 .requestMatchers(
+                                        "/",                       // Core app landing root
+                                        "/favicon.ico",            // Default browser favicon requests
+                                        "/error",                  // Spring Boot default error routing path
                                         "/swagger-ui.html",        // The old Swagger UI HTML (if used)
                                         "/swagger-ui/**",          // All Swagger UI resources (JS, CSS, etc.)
                                         "/v3/api-docs/**",         // The API JSON docs
                                         "/v3/api-docs.yaml",       // YAML version of the docs
                                         "/swagger-resources/**",   // Swagger resource descriptors
-                                        "/configuration/**"        // Swagger configuration endpoints
+                                        "/configuration/**",       // Swagger configuration endpoints
+                                        "/webjars/**"              // CRITICAL: Webjars files where Swagger UI CSS/JS assets are packed
                                 ).permitAll()
 //                        .requestMatchers(HttpMethod.GET, "/api/v1/teachers/{uuid}").hasAnyAuthority("VIEW_TEACHER", "VIEW_ONLY_TEACHER")
 //                                .requestMatchers(HttpMethod.GET, "/api/v1/teachers/*").permitAll()
