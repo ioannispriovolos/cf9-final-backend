@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.*;
 
 @Entity
@@ -89,5 +90,13 @@ public class User extends AbstractEntity implements UserDetails {
     @PrePersist
     public void initializeUUID() {
         this.uuid = UUID.randomUUID();
+
+        if (this.getCreatedAt() == null) {
+            this.setCreatedAt(Instant.now());
+        }
+
+        if (this.getUpdatedAt() == null) {
+            this.setUpdatedAt(Instant.now());
+        }
     }
 }
