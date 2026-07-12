@@ -39,8 +39,8 @@ public class UserServiceImpl implements IUserService {
             User user = mapper.mapToUserEntity(userInsertDTO);
             user.setPassword(passwordEncoder.encode(userInsertDTO.password()));
 
-            if (userInsertDTO.roleId() == 3)
-                throw new EntityInvalidArgumentException("Role","Role id=" + userInsertDTO.roleId() + " invalid. User can not have teacher role");
+//            if (userInsertDTO.roleId() == 3)
+//                throw new EntityInvalidArgumentException("Role","Role id=" + userInsertDTO.roleId() + " invalid. User can not have teacher role");
 
             Role role = roleRepository.findById(userInsertDTO.roleId())
                     .orElseThrow(() -> new EntityInvalidArgumentException("Role","Role id=" + userInsertDTO.roleId() + " invalid"));
@@ -58,7 +58,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional(readOnly = true)
     public UserReadOnlyDTO getUserByUUID(UUID uuid) throws EntityNotFoundException {
         try {
