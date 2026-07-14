@@ -120,4 +120,12 @@ public class UserController {
 //        return ResponseEntity.ok(teacherService.getTeacherByUUID(uuid));
         return ResponseEntity.ok(userService.getUserByUUIDDeletedFalse(uuid));
     }
+
+    @PatchMapping("/{uuid}")
+    public ResponseEntity<UserReadOnlyDTO> deleteUser(@PathVariable UUID uuid)
+            throws EntityNotFoundException {
+
+        UserReadOnlyDTO readOnlyDTO = userService.deleteUserByUUID(uuid);
+        return ResponseEntity.ok(readOnlyDTO);
+    }
 }

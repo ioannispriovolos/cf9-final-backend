@@ -88,4 +88,21 @@ public class UserServiceImpl implements IUserService {
             throw e;
         }
     }
+
+    @Override
+    @PreAuthorize("hasAuthority('DELETE_USER')")
+    @Transactional(rollbackFor = EntityNotFoundException.class)
+    public UserReadOnlyDTO deleteUserByUUID(UUID uuid) throws EntityNotFoundException {
+        try {
+            User user = userRepository.findByUuidAndDeletedFalse(uuid)
+                    .orElseThrow(() -> new EntityNotFoundException("Teacher","Teacher with uuid=" + uuid + " not found"));
+
+            user.softDelete();
+            log.info("User with uuid={} deleted successfully", uuid);
+            return mapper.mapToUserReadOnlyDTO(user);
+        } catch (EntityNotFoundException e) {
+            log.error("Update failed for teacher with uuid={}. Teacher not found", uuid, e);
+            throw e;
+        }
+    }
 }

@@ -14,4 +14,5 @@ public interface IUserService {
 
     UserReadOnlyDTO getUserByUUID(UUID uuid) throws EntityNotFoundException;
     UserReadOnlyDTO getUserByUUIDDeletedFalse(UUID uuid) throws EntityNotFoundException;
+    UserReadOnlyDTO deleteUserByUUID(UUID uuid) throws EntityNotFoundException;
 }
