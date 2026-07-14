@@ -115,7 +115,7 @@ public class UserController {
             )
     })
     @GetMapping("/{uuid}")
-    public ResponseEntity<UserReadOnlyDTO> getTeacherByUuid(@PathVariable UUID uuid)
+    public ResponseEntity<UserReadOnlyDTO> getUserByUuid(@PathVariable UUID uuid)
             throws EntityNotFoundException {
 //        return ResponseEntity.ok(teacherService.getTeacherByUUID(uuid));
         return ResponseEntity.ok(userService.getUserByUUIDDeletedFalse(uuid));
