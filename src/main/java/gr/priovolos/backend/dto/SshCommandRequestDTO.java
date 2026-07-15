@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Pattern;
 public record SshCommandRequestDTO(
         @NotBlank(message = "Host IP address cannot be blank")
         @Pattern(
-                regexp = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+                regexp = "^(?:(?:25[0-5]|2[0-4]\\d|1?\\d{1,2})(?:\\.(?!$)|$)){4}$",
                 message = "Must be a valid IPv4 address"
         )
         String host,
