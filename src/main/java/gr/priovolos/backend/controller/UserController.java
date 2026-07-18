@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -127,5 +128,11 @@ public class UserController {
 
         UserReadOnlyDTO readOnlyDTO = userService.deleteUserByUUID(uuid);
         return ResponseEntity.ok(readOnlyDTO);
+    }
+
+    @GetMapping("/allusers")
+    public ResponseEntity<List<UserReadOnlyDTO>> getAllUsers() {
+        List<UserReadOnlyDTO> users = userService.getAllUsersReadOnly();
+        return ResponseEntity.ok(users);
     }
 }

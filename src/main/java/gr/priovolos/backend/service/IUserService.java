@@ -6,6 +6,7 @@ import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.UserInsertDTO;
 import gr.priovolos.backend.dto.UserReadOnlyDTO;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface IUserService {
@@ -15,4 +16,6 @@ public interface IUserService {
     UserReadOnlyDTO getUserByUUID(UUID uuid) throws EntityNotFoundException;
     UserReadOnlyDTO getUserByUUIDDeletedFalse(UUID uuid) throws EntityNotFoundException;
     UserReadOnlyDTO deleteUserByUUID(UUID uuid) throws EntityNotFoundException;
+
+    List<UserReadOnlyDTO> getAllUsersReadOnly();
 }

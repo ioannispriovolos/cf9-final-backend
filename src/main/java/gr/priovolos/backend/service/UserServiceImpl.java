@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -104,5 +105,17 @@ public class UserServiceImpl implements IUserService {
             log.error("Update failed for teacher with uuid={}. Teacher not found", uuid, e);
             throw e;
         }
+    }
+
+    @PreAuthorize("hasAuthority('VIEW_USERS')")
+    @Transactional(readOnly = true)
+    public List<UserReadOnlyDTO> getAllUsersReadOnly() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserReadOnlyDTO(
+                        user.getUuid(),
+                        user.getUsername(),
+                        user.getRole().getName() // Or map the whole Role object/DTO depending on your field structure
+                ))
+                .toList();
     }
 }
