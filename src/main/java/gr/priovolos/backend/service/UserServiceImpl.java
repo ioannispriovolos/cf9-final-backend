@@ -5,6 +5,7 @@ import gr.priovolos.backend.core.exceptions.EntityInvalidArgumentException;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.UserInsertDTO;
 import gr.priovolos.backend.dto.UserReadOnlyDTO;
+import gr.priovolos.backend.dto.UserUpdateDTO;
 import gr.priovolos.backend.mapper.Mapper;
 import gr.priovolos.backend.model.Role;
 import gr.priovolos.backend.model.User;
@@ -117,5 +118,36 @@ public class UserServiceImpl implements IUserService {
                         user.getRole().getName() // Or map the whole Role object/DTO depending on your field structure
                 ))
                 .toList();
+    }
+
+    @PreAuthorize("hasAuthority('EDIT_USER')")
+    @Transactional
+    @Override
+    public UserReadOnlyDTO updateUserByUuid(UUID uuid, UserUpdateDTO dto) throws EntityNotFoundException {
+        // 1. Fetch active user by UUID
+        User user = userRepository.findByUuidAndDeletedFalse(uuid)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with UUID: ", uuid.toString()));
+
+        // 2. Update username if provided and changed
+        if (dto.username() != null && !dto.username().isBlank()) {
+            user.setUsername(dto.username());
+        }
+
+        // 3. Update role ONLY if a roleId is explicitly passed in
+        if (dto.roleId() != null) {
+            Role role = roleRepository.findById(dto.roleId())
+                    .orElseThrow(() -> new EntityNotFoundException("Role not found with ID: ", dto.roleId().toString()));
+            user.setRole(role);
+        }
+        // If dto.roleId() is null, user.getRole() stays untouched!
+
+        // 4. Save and return updated DTO
+        User updatedUser = userRepository.save(user);
+
+        return new UserReadOnlyDTO(
+                updatedUser.getUuid(),
+                updatedUser.getUsername(),
+                updatedUser.getRole() != null ? updatedUser.getRole().getName() : "NO_ROLE"
+        );
     }
 }

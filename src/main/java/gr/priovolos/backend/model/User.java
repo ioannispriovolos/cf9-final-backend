@@ -99,4 +99,9 @@ public class User extends AbstractEntity implements UserDetails {
             this.setUpdatedAt(Instant.now());
         }
     }
+
+    @PreUpdate
+    public void updateTimestampOnUpdate() {
+        this.setUpdatedAt(Instant.now());
+    }
 }

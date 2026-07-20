@@ -4,10 +4,7 @@ import gr.priovolos.backend.core.exceptions.EntityAlreadyExistsException;
 import gr.priovolos.backend.core.exceptions.EntityInvalidArgumentException;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.core.exceptions.ValidationException;
-import gr.priovolos.backend.dto.ErrorResponseDTO;
-import gr.priovolos.backend.dto.UserInsertDTO;
-import gr.priovolos.backend.dto.UserReadOnlyDTO;
-import gr.priovolos.backend.dto.ValidationErrorResponseDTO;
+import gr.priovolos.backend.dto.*;
 import gr.priovolos.backend.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -134,5 +131,13 @@ public class UserController {
     public ResponseEntity<List<UserReadOnlyDTO>> getAllUsers() {
         List<UserReadOnlyDTO> users = userService.getAllUsersReadOnly();
         return ResponseEntity.ok(users);
+    }
+
+    @PutMapping("/{uuid}")
+    public ResponseEntity<UserReadOnlyDTO> updateUserByUuid(
+            @PathVariable UUID uuid,
+            @Valid @RequestBody UserUpdateDTO dto
+    ) throws EntityNotFoundException {
+        return ResponseEntity.ok(userService.updateUserByUuid(uuid, dto));
     }
 }
