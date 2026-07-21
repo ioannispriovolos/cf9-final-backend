@@ -111,11 +111,11 @@ public class UserServiceImpl implements IUserService {
     @PreAuthorize("hasAuthority('VIEW_USERS')")
     @Transactional(readOnly = true)
     public List<UserReadOnlyDTO> getAllUsersReadOnly() {
-        return userRepository.findAll().stream()
+        return userRepository.findAllByDeletedFalse().stream()
                 .map(user -> new UserReadOnlyDTO(
                         user.getUuid(),
                         user.getUsername(),
-                        user.getRole().getName() // Or map the whole Role object/DTO depending on your field structure
+                        user.getRole().getName()
                 ))
                 .toList();
     }
