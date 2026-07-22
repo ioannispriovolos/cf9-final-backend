@@ -3,6 +3,7 @@ package gr.priovolos.backend.service;
 import gr.priovolos.backend.core.exceptions.EntityAlreadyExistsException;
 import gr.priovolos.backend.core.exceptions.EntityInvalidArgumentException;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
+import gr.priovolos.backend.dto.PageResponseDTO;
 import gr.priovolos.backend.dto.UserInsertDTO;
 import gr.priovolos.backend.dto.UserReadOnlyDTO;
 import gr.priovolos.backend.dto.UserUpdateDTO;
@@ -13,6 +14,8 @@ import gr.priovolos.backend.repository.RoleRepository;
 import gr.priovolos.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -108,17 +111,17 @@ public class UserServiceImpl implements IUserService {
         }
     }
 
-    @PreAuthorize("hasAuthority('VIEW_USERS')")
-    @Transactional(readOnly = true)
-    public List<UserReadOnlyDTO> getAllUsersReadOnly() {
-        return userRepository.findAllByDeletedFalse().stream()
-                .map(user -> new UserReadOnlyDTO(
-                        user.getUuid(),
-                        user.getUsername(),
-                        user.getRole().getName()
-                ))
-                .toList();
-    }
+//    @PreAuthorize("hasAuthority('VIEW_USERS')")
+//    @Transactional(readOnly = true)
+//    public List<UserReadOnlyDTO> getAllUsersReadOnly() {
+//        return userRepository.findAllByDeletedFalse().stream()
+//                .map(user -> new UserReadOnlyDTO(
+//                        user.getUuid(),
+//                        user.getUsername(),
+//                        user.getRole().getName()
+//                ))
+//                .toList();
+//    }
 
     @PreAuthorize("hasAuthority('EDIT_USER')")
     @Transactional
@@ -148,6 +151,26 @@ public class UserServiceImpl implements IUserService {
                 updatedUser.getUuid(),
                 updatedUser.getUsername(),
                 updatedUser.getRole() != null ? updatedUser.getRole().getName() : "NO_ROLE"
+        );
+    }
+
+    @PreAuthorize("hasAuthority('VIEW_USERS')")
+    @Transactional(readOnly = true)
+    public PageResponseDTO<UserReadOnlyDTO> getAllUsersPaginated(
+            Pageable pageable
+    ) {
+
+        Page<User> users =
+                userRepository.findAllByDeletedFalse(pageable);
+
+
+        return PageResponseDTO.from(
+                users,
+                user -> new UserReadOnlyDTO(
+                        user.getUuid(),
+                        user.getUsername(),
+                        user.getRole().getName()
+                )
         );
     }
 }

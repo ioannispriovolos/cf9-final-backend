@@ -1,6 +1,8 @@
 package gr.priovolos.backend.repository;
 
 import gr.priovolos.backend.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -15,8 +17,11 @@ public interface UserRepository extends JpaRepository<User, Long>,
     Optional<User> findByUuid(UUID uuid);
     Optional<User> findByUuidAndDeletedFalse(UUID uuid);
 
-    List<User> findAllByDeletedFalse();
+    //List<User> findAllByDeletedFalse();
 
     @EntityGraph(attributePaths = {"role", "role.capabilities"})
     Optional<User> findByUsername(String username);
+
+    @EntityGraph(attributePaths = {"role"})
+    Page<User> findAllByDeletedFalse(Pageable pageable);
 }

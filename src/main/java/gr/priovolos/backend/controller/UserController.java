@@ -13,6 +13,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -127,10 +131,26 @@ public class UserController {
         return ResponseEntity.ok(readOnlyDTO);
     }
 
+//    @GetMapping("/allusers")
+//    public ResponseEntity<List<UserReadOnlyDTO>> getAllUsers() {
+//        List<UserReadOnlyDTO> users = userService.getAllUsersReadOnly();
+//        return ResponseEntity.ok(users);
+//    }
+
     @GetMapping("/allusers")
-    public ResponseEntity<List<UserReadOnlyDTO>> getAllUsers() {
-        List<UserReadOnlyDTO> users = userService.getAllUsersReadOnly();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<PageResponseDTO<UserReadOnlyDTO>> getUsers(
+            @ParameterObject
+            @PageableDefault(
+                    size = 5,
+                    sort = "username",
+                    direction = Sort.Direction.ASC
+            )
+            Pageable pageable
+    ) {
+
+        return ResponseEntity.ok(
+                userService.getAllUsersPaginated(pageable)
+        );
     }
 
     @PutMapping("/{uuid}")
