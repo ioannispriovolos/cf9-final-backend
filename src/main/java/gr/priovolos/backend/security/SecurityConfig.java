@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/{uuid}").hasAuthority("EDIT_USER")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/users/allusers").hasAuthority("VIEW_USERS")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/authenticate").permitAll()
+                                .requestMatchers(HttpMethod.GET,"/api/v1/devices").hasAuthority("INSERT_DEVICE")
                                 .requestMatchers(HttpMethod.POST,"/api/v1/devices").hasAuthority("INSERT_DEVICE")                 // This blocks ALL unauthenticated traffic completely at the gate
                                 .requestMatchers("/api/v1/eligible/**").permitAll()
                                 .requestMatchers(
