@@ -1,5 +1,6 @@
 package gr.priovolos.backend.service;
 
+import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
 import gr.priovolos.backend.mapper.Mapper;
@@ -26,9 +27,9 @@ public class DeviceServiceImpl implements IDeviceService{
     @Override
     @Transactional(readOnly = true)
     public List<DeviceResponseDTO> getAllActiveDevices() {
-        return deviceRepository.findAll()
+        return deviceRepository.findAllByDeletedFalse()
                 .stream()
-                .map(this::mapToResponse)
+                .map(mapper::toDeviceResponseDTO)
                 .toList();
     }
 
@@ -43,6 +44,19 @@ public class DeviceServiceImpl implements IDeviceService{
         );
 
         return mapper.toDeviceResponseDTO(deviceRepository.save(device));
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('DELETE_DEVICE')")
+    @Transactional
+    public void softDeleteDevice(Long id) throws EntityNotFoundException {
+
+        Device device = deviceRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new EntityNotFoundException("DEVICE_NOT_FOUND", "Device not found."));
+
+        device.softDelete();
+
+        deviceRepository.save(device);
     }
 
     private DeviceResponseDTO mapToResponse(Device device) {

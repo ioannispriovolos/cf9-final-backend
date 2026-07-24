@@ -1,5 +1,6 @@
 package gr.priovolos.backend.controller;
 
+import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
 import gr.priovolos.backend.service.IDeviceService;
@@ -28,5 +29,13 @@ public class DeviceController {
     @PostMapping
     public ResponseEntity<DeviceResponseDTO> createDevice(@Valid @RequestBody DeviceCreationDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(deviceService.createDevice(request));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> softDeleteDevice(@PathVariable Long id) throws EntityNotFoundException {
+
+        deviceService.softDeleteDevice(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
