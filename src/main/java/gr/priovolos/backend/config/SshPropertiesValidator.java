@@ -50,7 +50,7 @@ public class SshPropertiesValidator {
         }
 
         if (properties.maximumCommandLength() < 1
-                || properties.maximumCommandLength() > 10_000) {
+                || properties.maximumCommandLength() > 2_000) {
             throw new IllegalStateException(
                     "SSH maximum command length is invalid."
             );
