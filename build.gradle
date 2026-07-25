@@ -77,7 +77,7 @@ dependencies {
 	implementation 'org.apache.tika:tika-core:3.2.3'
 
 	// Apache MINA SSHD Core
-	implementation 'org.apache.sshd:sshd-core:2.14.0'
+	implementation 'org.apache.sshd:sshd-core:2.18.0'
 }
 
 

@@ -1,0 +1,281 @@
+package gr.priovolos.backend.ssh;
+
+import gr.priovolos.backend.config.SshProperties;
+import gr.priovolos.backend.core.exceptions.SshCommandTimeoutException;
+import gr.priovolos.backend.dto.SshCommandResultDTO;
+import gr.priovolos.backend.security.DevicePasswordEncryption;
+import lombok.RequiredArgsConstructor;
+import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.channel.ChannelExec;
+import org.apache.sshd.client.channel.ClientChannelEvent;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.SshException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.time.Duration;
+import java.util.EnumSet;
+import java.util.Set;
+
+@Component
+@RequiredArgsConstructor
+public class SshCommandExecutor {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(SshCommandExecutor.class);
+
+    private final SshClient sshClient;
+
+    private final SshProperties properties;
+
+    private final DevicePasswordEncryption passwordEncryption;
+
+    public SshCommandResultDTO execute(
+            SshTarget target,
+            String command
+    ) {
+        long startedAt = System.nanoTime();
+
+        try {
+            validateTarget(target);
+
+            /*
+             * Keep the plaintext password in the smallest practical scope.
+             * Never log it and never return it to the frontend.
+             */
+            String decryptedPassword =
+                    passwordEncryption.decrypt(
+                            target.encryptedPassword()
+                    );
+
+            try {
+                return connectAuthenticateAndExecute(
+                        target,
+                        command,
+                        decryptedPassword,
+                        startedAt
+                );
+            } finally {
+                /*
+                 * This removes the reference, although Java Strings cannot
+                 * be reliably erased from JVM memory.
+                 */
+                decryptedPassword = null;
+            }
+
+        } catch (Exception exception) {
+
+            LOGGER.warn(
+                    "SSH operation failed: deviceId={}, host={}, type={}",
+                    target == null ? null : target.deviceId(),
+                    target == null ? null : target.ipAddress(),
+                    exception.getClass().getSimpleName()
+            );
+
+            LOGGER.debug(
+                    "Detailed SSH failure for deviceId={}",
+                    target == null ? null : target.deviceId(),
+                    exception
+            );
+
+            return SshCommandResultDTO.executionFailure(
+                    target == null ? null : target.deviceId(),
+                    target == null ? null : target.title(),
+                    target == null ? null : target.ipAddress(),
+                    safeErrorMessage(exception),
+                    elapsedMilliseconds(startedAt)
+            );
+        }
+    }
+
+    private SshCommandResultDTO connectAuthenticateAndExecute(
+            SshTarget target,
+            String command,
+            String decryptedPassword,
+            long startedAt
+    ) throws Exception {
+
+        ClientSession session = null;
+
+        try {
+            session = sshClient
+                    .connect(
+                            target.username(),
+                            target.ipAddress(),
+                            target.sshPort()
+                    )
+                    .verify(properties.connectionTimeout())
+                    .getSession();
+
+            session.addPasswordIdentity(decryptedPassword);
+
+            session.auth()
+                    .verify(properties.authenticationTimeout());
+
+            return executeCommand(
+                    session,
+                    target,
+                    command,
+                    startedAt
+            );
+
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    private SshCommandResultDTO executeCommand(
+            ClientSession session,
+            SshTarget target,
+            String command,
+            long startedAt
+    ) throws Exception {
+
+        LimitedOutputStream stdout =
+                new LimitedOutputStream(
+                        properties.maximumOutputBytes()
+                );
+
+        LimitedOutputStream stderr =
+                new LimitedOutputStream(
+                        properties.maximumOutputBytes()
+                );
+
+        try (ChannelExec channel =
+                     session.createExecChannel(command)) {
+
+            /*
+             * An exec channel is used instead of an interactive shell.
+             * No pseudo-terminal is requested.
+             */
+            channel.setOut(stdout);
+            channel.setErr(stderr);
+
+            channel.open()
+                    .verify(properties.connectionTimeout());
+
+            Set<ClientChannelEvent> events =
+                    channel.waitFor(
+                            EnumSet.of(
+                                    ClientChannelEvent.CLOSED,
+                                    ClientChannelEvent.TIMEOUT
+                            ),
+                            properties.commandTimeout().toMillis()
+                    );
+
+            if (events.contains(ClientChannelEvent.TIMEOUT)) {
+                channel.close(true);
+
+                throw new SshCommandTimeoutException(
+                        "The SSH command timed out."
+                );
+            }
+
+            Integer exitStatus = channel.getExitStatus();
+
+            long duration =
+                    elapsedMilliseconds(startedAt);
+
+            /*
+             * Some network appliances may close the channel without
+             * returning an SSH exit-status message.
+             */
+            if (exitStatus == null || exitStatus == 0) {
+                return SshCommandResultDTO.success(
+                        target.deviceId(),
+                        target.title(),
+                        target.ipAddress(),
+                        exitStatus,
+                        stdout.asString(),
+                        stderr.asString(),
+                        duration
+                );
+            }
+
+            return SshCommandResultDTO.remoteCommandFailure(
+                    target.deviceId(),
+                    target.title(),
+                    target.ipAddress(),
+                    exitStatus,
+                    stdout.asString(),
+                    stderr.asString(),
+                    duration
+            );
+        }
+    }
+
+    private void validateTarget(SshTarget target) {
+
+        if (target == null) {
+            throw new IllegalArgumentException(
+                    "SSH target is required."
+            );
+        }
+
+        if (target.deviceId() == null) {
+            throw new IllegalArgumentException(
+                    "Device ID is missing."
+            );
+        }
+
+        if (target.ipAddress() == null
+                || target.ipAddress().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Device IP address is missing."
+            );
+        }
+
+        if (target.sshPort() < 1
+                || target.sshPort() > 65_535) {
+            throw new IllegalArgumentException(
+                    "Device SSH port is invalid."
+            );
+        }
+
+        if (target.username() == null
+                || target.username().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Device SSH username is missing."
+            );
+        }
+
+        if (target.encryptedPassword() == null
+                || target.encryptedPassword().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Device SSH password is missing."
+            );
+        }
+    }
+
+    private String safeErrorMessage(Exception exception) {
+
+        if (exception instanceof SshCommandTimeoutException) {
+            return "The command exceeded the execution timeout.";
+        }
+
+        if (exception instanceof ConnectException) {
+            return "The device could not be reached.";
+        }
+
+        if (exception instanceof SocketTimeoutException) {
+            return "The SSH connection timed out.";
+        }
+
+        if (exception instanceof SshException) {
+            return "SSH connection or authentication failed.";
+        }
+
+        return "The SSH command could not be executed.";
+    }
+
+    private long elapsedMilliseconds(long startedAt) {
+        return Duration.ofNanos(
+                System.nanoTime() - startedAt
+        ).toMillis();
+    }
+}

@@ -65,6 +65,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/authenticate").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/devices").hasAuthority("INSERT_DEVICE")
                                 .requestMatchers(HttpMethod.POST,"/api/v1/devices").hasAuthority("INSERT_DEVICE")                 // This blocks ALL unauthenticated traffic completely at the gate
+                                .requestMatchers("/api/v1/ssh/execute").hasAuthority("INSERT_DEVICE")
                                 .requestMatchers("/api/v1/eligible/**").permitAll()
                                 .requestMatchers(
                                         "/",                       // Core app landing root
