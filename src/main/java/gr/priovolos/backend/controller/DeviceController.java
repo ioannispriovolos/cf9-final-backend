@@ -3,10 +3,14 @@ package gr.priovolos.backend.controller;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
+import gr.priovolos.backend.dto.PageResponseDTO;
 import gr.priovolos.backend.service.IDeviceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +25,26 @@ public class DeviceController {
 
     private final IDeviceService deviceService;
 
+//    @GetMapping
+//    public ResponseEntity<List<DeviceResponseDTO>> getAllDevices() {
+//        return ResponseEntity.ok(deviceService.getAllActiveDevices());
+//    }
+
     @GetMapping
-    public ResponseEntity<List<DeviceResponseDTO>> getAllDevices() {
-        return ResponseEntity.ok(deviceService.getAllActiveDevices());
+    public ResponseEntity<PageResponseDTO<DeviceResponseDTO>>
+    getAllActiveDevicesPaginated(
+
+            @PageableDefault(
+                    page = 0,
+                    size = 6,
+                    sort = "title",
+                    direction = Sort.Direction.ASC
+            )
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                deviceService.getAllActiveDevicesPaginated(pageable)
+        );
     }
 
     @PostMapping

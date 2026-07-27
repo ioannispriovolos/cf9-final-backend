@@ -17,4 +17,5 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     List<Device> findAllByIdInAndDeletedFalse(
             Collection<Long> ids
     );
+    Page<Device> findAllByDeletedFalse(Pageable pageable);
 }

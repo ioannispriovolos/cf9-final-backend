@@ -3,12 +3,15 @@ package gr.priovolos.backend.service;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
+import gr.priovolos.backend.dto.PageResponseDTO;
 import gr.priovolos.backend.mapper.Mapper;
 import gr.priovolos.backend.model.Device;
 import gr.priovolos.backend.repository.DeviceRepository;
 import gr.priovolos.backend.security.DevicePasswordEncryption;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,19 @@ public class DeviceServiceImpl implements IDeviceService{
                 .stream()
                 .map(mapper::toDeviceResponseDTO)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('INSERT_DEVICE')")
+    public PageResponseDTO<DeviceResponseDTO> getAllActiveDevicesPaginated(Pageable pageable) {
+        Page<Device> devicePage =
+                deviceRepository.findAllByDeletedFalse(pageable);
+
+        return PageResponseDTO.from(
+                devicePage,
+                mapper::toDeviceResponseDTO
+        );
     }
 
     @PreAuthorize("hasAuthority('INSERT_DEVICE')")
