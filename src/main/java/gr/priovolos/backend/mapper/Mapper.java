@@ -1,6 +1,7 @@
 package gr.priovolos.backend.mapper;
 
 import gr.priovolos.backend.dto.*;
+import gr.priovolos.backend.dto.dashboard.RecentDeviceDTO;
 import gr.priovolos.backend.model.Device;
 import gr.priovolos.backend.model.Role;
 import gr.priovolos.backend.model.User;
@@ -44,6 +45,19 @@ public class Mapper {
                 device.getIpAddress(),
                 device.getSshPort(),
                 device.getUsername()
+        );
+    }
+
+    public RecentDeviceDTO toRecentDeviceDTO(Device device) {
+
+        return new RecentDeviceDTO(
+                device.getId(),
+                device.getTitle(),
+                device.getManufacturer(),
+                device.getModel(),
+                device.getIpAddress(),
+                device.getSshPort(),
+                device.getUpdatedAt()
         );
     }
 }

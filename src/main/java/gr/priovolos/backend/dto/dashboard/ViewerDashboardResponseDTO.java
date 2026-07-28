@@ -12,6 +12,6 @@ public record ViewerDashboardResponseDTO(
         List<DashboardCountDTO> devicesByManufacturer,
         List<DashboardCountDTO> devicesByModel,
         List<MonthlyDeviceCountDTO> devicesAddedByMonth,
-        List<RecentDeviceDTO> recentlyUpdatedDevices
+        List<RecentDeviceDTO> recentlyCreatedDevices
 ) {
 }
