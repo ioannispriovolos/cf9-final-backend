@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.function.Function;
@@ -24,16 +24,18 @@ public class JwtService {
     private long jwtExpiration;
 
     public String generateToken(String username, String role) {
-        var claims = new HashMap<String, Object>();
-        claims.put("role", role);
-        return Jwts
-                .builder()
-                .setIssuer("https://api.codingfactory.gr")
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+        Date issuedAt = new Date();
+        Date expiration = new Date(
+                issuedAt.getTime() + jwtExpiration
+        );
+
+        return Jwts.builder()
+                .issuer("https://api.codingfactory.gr")
+                .subject(username)
+                .claim("role", role)
+                .issuedAt(issuedAt)
+                .expiration(expiration)
+                .signWith(getSignInKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -64,23 +66,14 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(getSignInKey())
+        return Jwts.parser()
+                .verifyWith(getSignInKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    /**
-     * Creates a HS256 Key. Key is an interface.
-     * Starting from secretKey we get a byte array
-     * of the secret. Then we get the {@link javax.crypto.SecretKey,
-     * class that implements the {@link Key } interface.
-     *
-     * @return  a SecretKey which implements Key.
-     */
-    private Key getSignInKey() {
+    private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
