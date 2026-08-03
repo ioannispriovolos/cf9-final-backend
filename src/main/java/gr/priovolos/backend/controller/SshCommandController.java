@@ -18,14 +18,63 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller responsible for executing SSH commands on managed
+ * network devices.
+ *
+ * <p>This controller exposes endpoints that allow authorized users
+ * to execute user-supplied SSH commands on one or more selected
+ * network devices.</p>
+ *
+ * <p>The controller supports secure multi-device execution by
+ * delegating the command execution to the SSH service, which
+ * establishes independent SSH sessions to the selected devices,
+ * executes the requested command, and aggregates the results into
+ * a single response.</p>
+ *
+ * <p>Only active (non-soft-deleted) devices may participate in
+ * command execution.</p>
+ *
+ * @author Ioannis Priovolos
+ */
 @RestController
 @RequestMapping("/api/v1/ssh")
 @RequiredArgsConstructor
 @Tag(name = "SSH Command Controller", description = "Secure multi-vendor SSH command execution engine")
 public class SshCommandController {
 
+    /**
+     * Service responsible for executing SSH commands on network devices.
+     */
     private final ISshCommandService sshCommandService;
 
+    /**
+     * Executes an SSH command on the selected network devices.
+     *
+     * <p>The supplied request contains the SSH command together with
+     * the identifiers of the target devices. The command is executed
+     * independently on every active device, and the results are
+     * aggregated into a single response.</p>
+     *
+     * <p>The response includes:
+     * <ul>
+     *     <li>Total number of requested devices.</li>
+     *     <li>Number of successful executions.</li>
+     *     <li>Number of failed executions.</li>
+     *     <li>Total execution duration.</li>
+     *     <li>Individual execution result for each device.</li>
+     * </ul>
+     *
+     * <p>Only authenticated and authorized users may execute SSH
+     * commands.</p>
+     *
+     * @param request the SSH execution request containing the command
+     *                and the selected device identifiers
+     * @return a batch execution response containing the execution
+     *         results for every processed device
+     * @throws EntityNotFoundException if one or more requested devices
+     *                                 do not exist or are unavailable
+     */
     @Operation(
             summary = "Execute SSH command on selected devices",
             description = """

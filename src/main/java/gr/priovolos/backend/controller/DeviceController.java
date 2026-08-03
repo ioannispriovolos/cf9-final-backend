@@ -22,19 +22,59 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller responsible for managing network devices.
+ *
+ * <p>This controller provides endpoints for registering, retrieving,
+ * and soft deleting network devices that are managed by the Network
+ * Infrastructure Management Platform.</p>
+ *
+ * <p>The controller supports multivendor environments and can be used
+ * to manage devices from vendors such as Cisco, MikroTik, Palo Alto,
+ * Aruba, and other SSH-enabled network devices.</p>
+ *
+ * <p>Device credentials are securely encrypted before being stored in
+ * the database and are only decrypted when an authorized SSH operation
+ * is performed.</p>
+ *
+ * <p>All retrieval operations return only active (non-soft-deleted)
+ * devices.</p>
+ *
+ * @author Ioannis Priovolos
+ */
 @RestController
 @RequestMapping("/api/v1/devices")
 @RequiredArgsConstructor
-@Tag(name = "Device Controller", description = "Secure multi-vendor device insertion, retrieval, soft-deletion for Cisco, Palo Alto, Aruba, MikroTik, etc.")
+@Tag(name = "Device Controller", description =
+                """
+                Provides secure management of network devices,
+                including registration, retrieval and soft deletion
+                for SSH-enabled devices from multiple vendors.
+                """)
 public class DeviceController {
 
+    /**
+     * Service responsible for managing network devices.
+     */
     private final IDeviceService deviceService;
 
-//    @GetMapping
-//    public ResponseEntity<List<DeviceResponseDTO>> getAllDevices() {
-//        return ResponseEntity.ok(deviceService.getAllActiveDevices());
-//    }
-
+    /**
+     * Retrieves a paginated list of active network devices.
+     *
+     * <p>Only devices that have not been soft deleted are returned.
+     * Results are ordered according to the supplied pagination
+     * parameters or the configured default values.</p>
+     *
+     * <p>Default pagination:
+     * <ul>
+     *     <li>Page: 0</li>
+     *     <li>Size: 6</li>
+     *     <li>Sort: title (ascending)</li>
+     * </ul>
+     *
+     * @param pageable pagination and sorting information
+     * @return a paginated collection of active network devices
+     */
     @Operation(
             summary = "Get all active devices",
             description = """
@@ -84,6 +124,17 @@ public class DeviceController {
         return ResponseEntity.ok(deviceService.getAllActiveDevicesPaginated(pageable));
     }
 
+    /**
+     * Registers a new network device.
+     *
+     * <p>The supplied device information is validated before being
+     * persisted. SSH credentials are encrypted prior to storage,
+     * ensuring that plaintext passwords are never written to the
+     * database.</p>
+     *
+     * @param request the device creation request
+     * @return the newly created network device
+     */
     @Operation(
             summary = "Create a new network device",
             description = """
@@ -126,6 +177,26 @@ public class DeviceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(deviceService.createDevice(request));
     }
 
+    /**
+     * Soft deletes a network device.
+     *
+     * <p>The device is not permanently removed from the database.
+     * Instead, it is marked as deleted and assigned a deletion
+     * timestamp.</p>
+     *
+     * <p>Soft-deleted devices are automatically excluded from:
+     * <ul>
+     *     <li>Device listings.</li>
+     *     <li>Dashboard statistics.</li>
+     *     <li>SSH command execution.</li>
+     * </ul>
+     *
+     * @param id the identifier of the device to be soft deleted
+     * @return HTTP 204 (No Content) when the operation completes
+     * successfully
+     * @throws EntityNotFoundException if the specified device does
+     * not exist or has already been deleted
+     */
     @Operation(
             summary = "Soft delete a network device",
             description = """

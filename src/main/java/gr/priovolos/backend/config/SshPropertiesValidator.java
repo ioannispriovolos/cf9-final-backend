@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * <p>This component performs additional runtime validation of the values
  * loaded into {@link SshProperties}. If an invalid configuration is
  * detected, the application fails to start with a descriptive error
- * message, preventing undefined behaviour during SSH operations.</p>
+ * message, preventing undefined behavior during SSH operations.</p>
  *
  * <p>The validation ensures that configured timeouts and operational
  * limits remain within acceptable ranges for the application's
