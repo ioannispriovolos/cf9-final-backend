@@ -292,7 +292,6 @@ public class UserController {
         );
     }
 
-
     /**
      * Updates an existing user.
      *
