@@ -57,7 +57,7 @@ public class OpenApiConfig {
                         .title("Network Automation API")
                         .version("1.0.0")
                         .description("""
-                                REST API for managing secure multi-vendor hardware orchestration infrastructure.
+                                REST API for managing secure multi-vendor network infrastructure.
                                 
                                 Authentication is done via JWT Bearer tokens.
                                 Obtain a token from /api/auth/authenticate before using secured endpoints.
