@@ -11,15 +11,44 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
-/*
-  The practical effect is that Swagger UI shows an "Authorize" button where you paste your JWT token.
+/**
+ * Spring configuration class responsible for configuring the
+ * OpenAPI (Swagger) documentation for the REST API.
+ *
+ * <p>This configuration customizes the generated API documentation
+ * by providing application metadata, contact information, licensing
+ * details, and the JWT Bearer authentication scheme used by the
+ * application.</p>
+ *
+ * <p>All secured endpoints automatically inherit the configured
+ * security requirement, allowing authenticated API requests to be
+ * executed directly from the Swagger UI.</p>
+ *
+ * <p>After obtaining a JWT from the authentication endpoint,
+ * users can authorize Swagger requests by clicking the
+ * <strong>Authorize</strong> button and supplying the token.</p>
+ *
+ * @author Ioannis Priovolos
  */
+@Configuration
 public class OpenApiConfig {
 
-    /*
-        Provides the metadata that appears in Swagger UI's header section —
-        purely informational, no functional impact on the API itself
+    /**
+     * Creates the OpenAPI configuration used by Swagger UI.
+     *
+     * <p>The generated documentation includes:</p>
+     * <ul>
+     *     <li>API title, version and description.</li>
+     *     <li>Contact information.</li>
+     *     <li>License information.</li>
+     *     <li>Global JWT Bearer authentication configuration.</li>
+     * </ul>
+     *
+     * <p>The configured security scheme enables the
+     * <strong>Authorize</strong> button in Swagger UI, allowing
+     * authenticated requests to secured REST endpoints.</p>
+     *
+     * @return the configured {@link OpenAPI} instance
      */
     @Bean
     public OpenAPI customOpenAPI() {
@@ -40,9 +69,19 @@ public class OpenApiConfig {
                         .license(new License()
                                 .name("CC0 1.0 Universal")
                                 .url("https://creativecommons.org/publicdomain/zero/1.0")))
-                        // 1. Apply the authorization requirement globally to all endpoints
+                        /*
+                         * Applies JWT authentication globally so that all
+                         * secured endpoints require a Bearer token.
+                         */
                         .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-                        // 2. Define how the Authorize button expects to receive credentials
+                        /*
+                         * Defines the JWT Bearer authentication scheme used
+                         * by Swagger UI.
+                         *
+                         * This configuration enables the "Authorize" button,
+                         * allowing users to authenticate once and execute
+                         * secured requests directly from the documentation.
+                         */
                         .components(new Components()
                                 .addSecuritySchemes("bearerAuth",
                                         new SecurityScheme()
