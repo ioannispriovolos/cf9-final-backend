@@ -80,17 +80,6 @@ public class SecurityConfig {
                                         "/configuration/**",       // Swagger configuration endpoints
                                         "/webjars/**"              // CRITICAL: Webjars files where Swagger UI CSS/JS assets are packed
                                 ).permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/teachers/{uuid}").hasAnyAuthority("VIEW_TEACHER", "VIEW_ONLY_TEACHER")
-//                                .requestMatchers(HttpMethod.GET, "/api/v1/teachers/*").permitAll()
-//                                .requestMatchers(HttpMethod.POST, "/api/v1/teachers/{uuid}/*").permitAll()
-//                                .requestMatchers(HttpMethod.GET, "/api/v1/users/*").permitAll()
-//                                .requestMatchers(HttpMethod.PUT, "/api/v1/teachers/{uuid}").hasAuthority("EDIT_TEACHER")
-//                                .requestMatchers(HttpMethod.PATCH, "/api/v1/teachers/{uuid}").hasAuthority("DELETE_TEACHER")
-
-//                                .requestMatchers(HttpMethod.GET, "/api/v1/teachers").hasAuthority("VIEW_TEACHERS")
-//                                .requestMatchers(HttpMethod.GET, "/api/v1/teachers/*").hasAnyAuthority("VIEW_TEACHER", "VIEW_ONLY_TEACHER")
-//                                .requestMatchers(HttpMethod.GET, "/api/v1/teachers/*").permitAll()
-//                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))

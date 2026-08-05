@@ -38,7 +38,3 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         );
     }
 }
-
-// Write a custom JSON response with the collected information
-//        String jsonResponse = "{\"code\": \"UserNotAuthorized\", \"description\": \"User is not allowed to access this route.\"}";
-//        response.getWriter().write(jsonResponse);

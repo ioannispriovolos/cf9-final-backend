@@ -44,10 +44,3 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         );
     }
 }
-
-// Set the response status to 401 Unauthorized
-//        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//        response.setContentType("application/json; charset=UTF-8");
-//
-//        String json = "{\"code\": \"UserNotAuthenticated\", \"description\": \"User needs to authenticate in order to access this route\"}";
-//        response.getWriter().write(json);
