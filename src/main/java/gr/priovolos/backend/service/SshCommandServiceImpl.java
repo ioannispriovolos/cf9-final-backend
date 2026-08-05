@@ -26,6 +26,29 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation responsible for executing SSH commands on
+ * one or more managed network devices.
+ *
+ * <p>This service coordinates the complete batch execution workflow,
+ * including request validation, device retrieval, concurrent command
+ * execution, result aggregation, and response generation.</p>
+ *
+ * <p>Each requested device is executed independently using a dedicated
+ * worker thread from the configured SSH executor service. This allows
+ * multiple devices to be processed concurrently while preserving the
+ * order of the devices supplied by the client.</p>
+ *
+ * <p>The service itself does not establish SSH connections directly.
+ * Instead, it delegates command execution to {@link SshCommandExecutor},
+ * allowing the orchestration logic to remain separate from the SSH
+ * communication implementation.</p>
+ *
+ * <p>Only active (non-deleted) devices may participate in a batch
+ * execution request.</p>
+ *
+ * @author Ioannis Priovolos
+ */
 @Service
 public class SshCommandServiceImpl implements ISshCommandService {
 
@@ -37,6 +60,16 @@ public class SshCommandServiceImpl implements ISshCommandService {
 
     private final SshProperties properties;
 
+    /**
+     * Creates a new SSH command service.
+     *
+     * @param deviceRepository repository used to retrieve target devices
+     * @param commandExecutor component responsible for executing SSH commands
+     * @param commandValidator validator for user supplied commands
+     * @param properties SSH configuration properties
+     * @param sshExecutorService executor responsible for concurrent
+     *                           command execution
+     */
     public SshCommandServiceImpl(
             DeviceRepository deviceRepository,
             SshCommandExecutor commandExecutor,
@@ -55,6 +88,31 @@ public class SshCommandServiceImpl implements ISshCommandService {
     @Qualifier("sshExecutorService")
     private final ExecutorService sshExecutorService;
 
+    /**
+     * Executes an SSH command on the selected network devices.
+     *
+     * <p>The execution workflow consists of:</p>
+     * <ol>
+     *     <li>Validating the requested device identifiers.</li>
+     *     <li>Validating and normalizing the SSH command.</li>
+     *     <li>Retrieving all active devices.</li>
+     *     <li>Verifying that every requested device exists.</li>
+     *     <li>Creating immutable SSH execution targets.</li>
+     *     <li>Executing commands concurrently.</li>
+     *     <li>Collecting and aggregating execution results.</li>
+     *     <li>Returning a batch execution summary.</li>
+     * </ol>
+     *
+     * <p>The order of the returned results matches the order of
+     * the device identifiers supplied by the client.</p>
+     *
+     * <p>Access requires the {@code INSERT_DEVICE} capability.</p>
+     *
+     * @param request the SSH execution request
+     * @return the aggregated batch execution result
+     * @throws EntityNotFoundException if one or more requested
+     *                                 devices do not exist
+     */
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('INSERT_DEVICE')")
@@ -135,6 +193,16 @@ public class SshCommandServiceImpl implements ISshCommandService {
         );
     }
 
+    /**
+     * Retrieves the result of an asynchronous SSH execution.
+     *
+     * <p>If an unexpected exception occurs while processing a worker
+     * thread, a synthetic failure result is returned instead of
+     * allowing the entire batch execution to fail.</p>
+     *
+     * @param future the asynchronous SSH execution
+     * @return the execution result
+     */
     private SshCommandResultDTO joinSafely(
             CompletableFuture<SshCommandResultDTO> future
     ) {
@@ -156,6 +224,19 @@ public class SshCommandServiceImpl implements ISshCommandService {
         }
     }
 
+    /**
+     * Validates the requested device identifiers.
+     *
+     * <p>The validation ensures that:</p>
+     * <ul>
+     *     <li>At least one device has been selected.</li>
+     *     <li>The maximum configured batch size is not exceeded.</li>
+     *     <li>Every identifier is positive.</li>
+     * </ul>
+     *
+     * @param requestedIds the requested device identifiers
+     * @throws IllegalArgumentException if validation fails
+     */
     private void validateRequestedDeviceIds(
             Set<Long> requestedIds
     ) {
@@ -185,6 +266,15 @@ public class SshCommandServiceImpl implements ISshCommandService {
         }
     }
 
+    /**
+     * Verifies that every requested device exists and has not been
+     * softly deleted.
+     *
+     * @param requestedIds the identifiers supplied by the client
+     * @param devices the devices retrieved from the repository
+     * @throws EntityNotFoundException if one or more requested
+     *                                 devices cannot be found
+     */
     private void ensureAllDevicesWereFound(
             Set<Long> requestedIds,
             List<Device> devices
@@ -208,6 +298,13 @@ public class SshCommandServiceImpl implements ISshCommandService {
         }
     }
 
+    /**
+     * Calculates the elapsed execution time.
+     *
+     * @param startedAt the start time expressed using
+     *                  {@link System#nanoTime()}
+     * @return the elapsed execution time in milliseconds
+     */
     private long elapsedMilliseconds(long startedAt) {
         return Duration.ofNanos(
                 System.nanoTime() - startedAt
