@@ -13,6 +13,25 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
+/**
+ * Base class for all persistent entities in the application.
+ *
+ * <p>This mapped superclass provides common auditing and soft-delete
+ * functionality shared by multiple domain entities. By centralizing
+ * these properties, duplication is reduced and consistent behavior
+ * is enforced throughout the persistence layer.</p>
+ *
+ * <p>Spring Data JPA auditing automatically populates the creation
+ * and last modification timestamps through the
+ * {@link AuditingEntityListener}.</p>
+ *
+ * <p>Entities inheriting from this class support logical
+ * (soft) deletion. Instead of being physically removed from the
+ * database, they are marked as deleted and the deletion timestamp
+ * is recorded, allowing historical data to be preserved.</p>
+ *
+ * @author Ioannis Priovolos
+ */
 @MappedSuperclass
 @Getter
 @Setter
@@ -35,6 +54,15 @@ public abstract class AbstractEntity {
     @Column(name = "deleted_at", columnDefinition = "TIMESTAMPTZ")
     private Instant deletedAt;
 
+    /**
+     * Performs a logical (soft) deletion of the entity.
+     *
+     * <p>Instead of permanently removing the entity from the
+     * database, this method marks it as deleted and records the
+     * current UTC timestamp. Soft-deleted entities remain stored
+     * for auditing and historical purposes but are typically
+     * excluded from normal application operations.</p>
+     */
     public void softDelete() {
         this.deleted = true;
         this.deletedAt = Instant.now();
