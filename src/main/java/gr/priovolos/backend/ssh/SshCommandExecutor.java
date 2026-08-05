@@ -20,6 +20,32 @@ import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Set;
 
+/**
+ * Component responsible for executing a validated SSH command on a
+ * single managed network device.
+ *
+ * <p>This class encapsulates the low-level SSH workflow for one target,
+ * including:</p>
+ * <ul>
+ *     <li>Validating the target device information.</li>
+ *     <li>Decrypting the stored SSH password.</li>
+ *     <li>Establishing the SSH connection.</li>
+ *     <li>Authenticating the device session.</li>
+ *     <li>Executing the command through an SSH exec channel.</li>
+ *     <li>Capturing bounded standard and error output.</li>
+ *     <li>Converting execution failures into safe response messages.</li>
+ * </ul>
+ *
+ * <p>The executor never returns or logs device passwords. Detailed
+ * exceptions are written only to debug logs, while API responses
+ * receive generalized error messages that avoid exposing sensitive
+ * infrastructure information.</p>
+ *
+ * <p>This component processes one device at a time. Batch coordination
+ * and concurrent execution are handled by the SSH command service.</p>
+ *
+ * @author Ioannis Priovolos
+ */
 @Component
 @RequiredArgsConstructor
 public class SshCommandExecutor {
@@ -33,6 +59,22 @@ public class SshCommandExecutor {
 
     private final DevicePasswordEncryption passwordEncryption;
 
+    /**
+     * Executes an SSH command on a single target device.
+     *
+     * <p>The target is validated before the encrypted password is
+     * decrypted. The plaintext password remains within the smallest
+     * practical scope and is never logged or returned to the client.</p>
+     *
+     * <p>All expected and unexpected execution failures are converted
+     * into a failed {@link SshCommandResultDTO}. This prevents a single
+     * device failure from terminating an entire batch operation.</p>
+     *
+     * @param target the immutable SSH target containing the device
+     *               connection information
+     * @param command the validated command to execute
+     * @return the successful or failed result of the SSH operation
+     */
     public SshCommandResultDTO execute(
             SshTarget target,
             String command
@@ -91,6 +133,22 @@ public class SshCommandExecutor {
         }
     }
 
+    /**
+     * Establishes an SSH connection, authenticates the session, and
+     * delegates command execution.
+     *
+     * <p>The connection and authentication phases use their respective
+     * configurable timeouts. The session is always closed in the
+     * {@code finally} block, regardless of success or failure.</p>
+     *
+     * @param target the target device
+     * @param command the command to execute
+     * @param decryptedPassword the plaintext SSH password
+     * @param startedAt the batch-relative execution start time obtained
+     *                  from {@link System#nanoTime()}
+     * @return the command execution result
+     * @throws Exception if connection, authentication, or execution fails
+     */
     private SshCommandResultDTO connectAuthenticateAndExecute(
             SshTarget target,
             String command,
@@ -129,6 +187,30 @@ public class SshCommandExecutor {
         }
     }
 
+    /**
+     * Executes the command through an SSH exec channel.
+     *
+     * <p>An exec channel is used instead of an interactive shell,
+     * and no pseudo-terminal is requested. Standard output and
+     * standard error are captured separately using bounded output
+     * streams to prevent excessive memory consumption.</p>
+     *
+     * <p>If execution exceeds the configured command timeout, the
+     * channel is closed and an {@link SshCommandTimeoutException}
+     * is thrown.</p>
+     *
+     * <p>A missing exit status is treated as success because some
+     * network appliances close the SSH channel without sending an
+     * explicit exit-status message.</p>
+     *
+     * @param session the authenticated SSH session
+     * @param target the target device
+     * @param command the command to execute
+     * @param startedAt the operation start time obtained from
+     *                  {@link System#nanoTime()}
+     * @return the command execution result
+     * @throws Exception if channel creation or command execution fails
+     */
     private SshCommandResultDTO executeCommand(
             ClientSession session,
             SshTarget target,
@@ -209,6 +291,17 @@ public class SshCommandExecutor {
         }
     }
 
+    /**
+     * Validates the SSH target before any connection or decryption
+     * operation is attempted.
+     *
+     * <p>The validation ensures that the target contains a device ID,
+     * IP address, valid SSH port, username, and encrypted password.</p>
+     *
+     * @param target the target to validate
+     * @throws IllegalArgumentException if the target or one of its
+     *                                  required values is invalid
+     */
     private void validateTarget(SshTarget target) {
 
         if (target == null) {
@@ -252,6 +345,18 @@ public class SshCommandExecutor {
         }
     }
 
+    /**
+     * Converts an internal exception into a safe client-facing error
+     * message.
+     *
+     * <p>The returned messages intentionally avoid exposing stack
+     * traces, credentials, implementation details, or low-level
+     * network information.</p>
+     *
+     * @param exception the exception raised during SSH execution
+     * @return a generalized error message suitable for an API response
+     */
+
     private String safeErrorMessage(Exception exception) {
 
         if (exception instanceof SshCommandTimeoutException) {
@@ -273,6 +378,16 @@ public class SshCommandExecutor {
         return "The SSH command could not be executed.";
     }
 
+    /**
+     * Calculates the elapsed execution time in milliseconds.
+     *
+     * <p>{@link System#nanoTime()} is used because it is monotonic
+     * and therefore appropriate for measuring elapsed durations.</p>
+     *
+     * @param startedAt the start time obtained from
+     *                  {@link System#nanoTime()}
+     * @return the elapsed duration in milliseconds
+     */
     private long elapsedMilliseconds(long startedAt) {
         return Duration.ofNanos(
                 System.nanoTime() - startedAt
