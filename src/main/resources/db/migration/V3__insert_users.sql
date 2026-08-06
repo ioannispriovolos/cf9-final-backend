@@ -1,4 +1,4 @@
--- Seed your 3 System Users using PostgreSQL's native UUID generation
+-- 3. Seed your 3 System Users using PostgreSQL's native UUID generation
 -- Password hashes below are all the BCrypt hash for: password123
 INSERT INTO users (id, uuid, username, password, role_id, created_at, updated_at, deleted, deleted_at)
 VALUES
@@ -36,5 +36,5 @@ VALUES
         NULL
     );
 
--- Correct your Identity column counter so future user creations don't collide
+-- 4. Correct your Identity column counter so future user creations don't collide
 ALTER TABLE users ALTER COLUMN id RESTART WITH 4;
