@@ -57,14 +57,15 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
-                                .requestMatchers(HttpMethod.POST, "/api/v1/teachers").permitAll()           // register
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/users/{uuid}").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/{uuid}").hasAuthority("EDIT_USER")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/users/allusers").hasAuthority("VIEW_USERS")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/authenticate").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/devices").hasAuthority("INSERT_DEVICE")
-                                .requestMatchers(HttpMethod.POST,"/api/v1/devices").hasAuthority("INSERT_DEVICE")                 // This blocks ALL unauthenticated traffic completely at the gate
+                                .requestMatchers(HttpMethod.POST,"/api/v1/devices").hasAuthority("INSERT_DEVICE")
+                                .requestMatchers(HttpMethod.PATCH,"/api/v1/devices/{id}").hasAuthority("DELETE_DEVICE")
+                                .requestMatchers(HttpMethod.PUT,"/api/v1/devices/{id}").hasAuthority("EDIT_DEVICE")
                                 .requestMatchers("/api/v1/ssh/execute").hasAuthority("INSERT_DEVICE")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/dashboard/viewer").hasAuthority("VIEW_ONLY_USER")
                                 .requestMatchers("/api/v1/eligible/**").permitAll()

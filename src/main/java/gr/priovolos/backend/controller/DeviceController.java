@@ -1,11 +1,14 @@
 package gr.priovolos.backend.controller;
 
+import gr.priovolos.backend.core.exceptions.EntityInvalidArgumentException;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
+import gr.priovolos.backend.dto.DeviceUpdateDTO;
 import gr.priovolos.backend.dto.PageResponseDTO;
 import gr.priovolos.backend.service.IDeviceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -242,5 +245,85 @@ public class DeviceController {
         deviceService.softDeleteDevice(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Updates one or more properties of an active network device.
+     *
+     * <p>Only fields supplied in the request are changed. Omitted
+     * fields retain their existing values. The stored SSH password is
+     * not modified by this operation.</p>
+     *
+     * @param id the identifier of the device to update
+     * @param request the requested device changes
+     * @return the updated device
+     * @throws EntityNotFoundException if no active device exists with
+     *                                 the supplied identifier
+     */
+    @Operation(
+            summary = "Update a network device",
+            description = """
+                Updates one or more properties of an active network device.
+
+                Fields omitted from the request retain their existing values.
+                The device password is not changed by this endpoint.
+
+                Soft-deleted devices cannot be updated.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Network device updated successfully.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = DeviceResponseDTO.class
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid device ID or request values.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "User does not have permission to update devices.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Active network device not found.",
+                    content = @Content
+            )
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<DeviceResponseDTO> updateDeviceById(
+
+            @Parameter(
+                    description = "ID of the active device to update.",
+                    required = true,
+                    example = "10"
+            )
+            @PathVariable Long id,
+
+            @Valid
+            @RequestBody
+            DeviceUpdateDTO request
+
+    ) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        return ResponseEntity.ok(
+                deviceService.updateDeviceById(
+                        id,
+                        request
+                )
+        );
     }
 }

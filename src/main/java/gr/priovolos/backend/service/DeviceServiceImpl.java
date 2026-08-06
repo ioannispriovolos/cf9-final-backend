@@ -1,8 +1,10 @@
 package gr.priovolos.backend.service;
 
+import gr.priovolos.backend.core.exceptions.EntityInvalidArgumentException;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
+import gr.priovolos.backend.dto.DeviceUpdateDTO;
 import gr.priovolos.backend.dto.PageResponseDTO;
 import gr.priovolos.backend.mapper.Mapper;
 import gr.priovolos.backend.model.Device;
@@ -16,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -157,6 +160,109 @@ public class DeviceServiceImpl implements IDeviceService{
                 device.getIpAddress(),
                 device.getSshPort(),
                 device.getUsername()
+        );
+    }
+
+    /**
+     * Updates one or more editable properties of an active network device.
+     *
+     * <p>The method supports partial updates. Only values supplied in the
+     * {@link DeviceUpdateDTO} are applied, while omitted values remain
+     * unchanged.</p>
+     *
+     * <p>The device password is not modified by this operation. The update
+     * is limited to the device title, manufacturer, model, IP address,
+     * SSH port, and username.</p>
+     *
+     * <p>The operation requires the {@code EDIT_DEVICE} capability and
+     * can only be performed on active, non-soft-deleted devices.</p>
+     *
+     * <p>The {@code updatedAt} timestamp is refreshed for every successful
+     * update request, even when the supplied values are identical to the
+     * currently stored values.</p>
+     *
+     * @param id the identifier of the active device to update
+     * @param request the optional device properties to update
+     * @return the updated device as a read-only response DTO
+     * @throws EntityNotFoundException if no active device exists with
+     *                                 the supplied identifier
+     * @throws EntityInvalidArgumentException if the request does not
+     *                                        contain any properties to update
+     */
+    @Override
+    @PreAuthorize("hasAuthority('EDIT_DEVICE')")
+    @Transactional
+    public DeviceResponseDTO updateDeviceById(
+            Long id,
+            DeviceUpdateDTO request
+    ) throws EntityNotFoundException, EntityInvalidArgumentException {
+
+        if (!request.hasChanges()) {
+            throw new EntityInvalidArgumentException(
+                    "Device",
+                    "At least one device property must be provided."
+            );
+        }
+
+        Device device = deviceRepository
+                .findByIdAndDeletedFalse(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Device",
+                                "Active device with id="
+                                        + id
+                                        + " was not found."
+                        )
+                );
+
+        if (request.title() != null) {
+            device.setTitle(
+                    request.title().trim()
+            );
+        }
+
+        if (request.manufacturer() != null) {
+            device.setManufacturer(
+                    request.manufacturer().trim()
+            );
+        }
+
+        if (request.model() != null) {
+            device.setModel(
+                    request.model().trim()
+            );
+        }
+
+        if (request.ipAddress() != null) {
+            device.setIpAddress(
+                    request.ipAddress().trim()
+            );
+        }
+
+        if (request.sshPort() != null) {
+            device.setSshPort(
+                    request.sshPort()
+            );
+        }
+
+        if (request.username() != null) {
+            device.setUsername(
+                    request.username().trim()
+            );
+        }
+
+        /*
+         * Always update the modification timestamp for every
+         * successful update request, even when the supplied values
+         * are identical to the currently stored values.
+         */
+        device.setUpdatedAt(Instant.now());
+
+        Device updatedDevice =
+                deviceRepository.save(device);
+
+        return mapper.toDeviceResponseDTO(
+                updatedDevice
         );
     }
 }

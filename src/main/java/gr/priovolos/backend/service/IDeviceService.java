@@ -1,8 +1,10 @@
 package gr.priovolos.backend.service;
 
+import gr.priovolos.backend.core.exceptions.EntityInvalidArgumentException;
 import gr.priovolos.backend.core.exceptions.EntityNotFoundException;
 import gr.priovolos.backend.dto.DeviceCreationDTO;
 import gr.priovolos.backend.dto.DeviceResponseDTO;
+import gr.priovolos.backend.dto.DeviceUpdateDTO;
 import gr.priovolos.backend.dto.PageResponseDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,4 +80,21 @@ public interface IDeviceService {
     PageResponseDTO<DeviceResponseDTO> getAllActiveDevicesPaginated(
             Pageable pageable
     );
+
+    /**
+     * Updates the supplied fields of an active network device.
+     *
+     * <p>Fields that are not included in the request remain
+     * unchanged.</p>
+     *
+     * @param id the device identifier
+     * @param request the requested device changes
+     * @return the updated device
+     * @throws EntityNotFoundException if no active device exists
+     *                                 with the specified identifier
+     */
+    DeviceResponseDTO updateDeviceById(
+            Long id,
+            DeviceUpdateDTO request
+    ) throws EntityNotFoundException, EntityInvalidArgumentException;
 }
