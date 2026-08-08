@@ -12,6 +12,19 @@ The backend follows a layered architecture influenced by Domain-Driven Design pr
 
 ---
 
+## Frontend Repository
+
+This repository contains the **backend REST API** of the Network Infrastructure Management Platform.
+
+The corresponding frontend application is implemented separately using React and is available here:
+
+**Frontend Repository:**
+https://github.com/ioannispriovolos/cf9-final-frontend
+
+The frontend communicates with this backend through its REST API and provides the user interface for authentication, dashboard visualization, user and device management, and SSH command execution.
+
+---
+
 # Features
 
 - JWT Authentication
@@ -324,6 +337,13 @@ The backend implements multiple security layers:
 - The backend exposes a fully documented REST API through Swagger/OpenAPI.
 - The included demo users provide access to the different authorization levels implemented by the platform.
 - If the seeded passwords are not accepted due to BCrypt differences between environments, execute the provided `PasswordRepairRunner` once and remove it afterwards.
+
+---
+
+## Related Repositories
+
+* **Backend:** https://github.com/ioannispriovolos/cf9-final-backend
+* **Frontend:** https://github.com/ioannispriovolos/cf9-final-frontend
 
 ---
 
