@@ -8,6 +8,8 @@ The platform enables centralized management of network devices from multiple ven
 
 The project follows modern Spring Boot development practices, including layered architecture, Data Transfer Objects (DTOs), service-oriented design, validation, exception handling, JWT authentication, Flyway database migrations, and Docker-based development.
 
+The backend follows a layered architecture influenced by Domain-Driven Design principles. The domain model represents the core concepts of network infrastructure management, including devices, users, roles and capabilities, while controllers, DTOs, application services, repositories, security and infrastructure concerns are separated into dedicated layers.
+
 ---
 
 # Features
